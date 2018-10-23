@@ -2,8 +2,13 @@
 
 THRESHOLD="1"
 SLEEP="10"
-WORKDIR="~root/ki"
+WORKDIR="/opt/de/linuxki"
 export PATH=$PATH:/opt/linuxki
+
+#Create workdir
+if [ ! -d $WORKDIR ]; then
+    mkdir -p $WORKDIR
+fi
 
 # Remove stop-file
 if [ -e $WORKDIR/stop ]; then
