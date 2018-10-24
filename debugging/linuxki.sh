@@ -3,12 +3,15 @@
 if [ -z "$THRESHOLD" ]; then
     THRESHOLD="20"
 fi
+PIDFILE=/var/pid/delinuxki.pid
 SLEEP="10"
 WORKDIR="/opt/de/linuxki"
 STOPFILE="$WORKDIR/stop_`date +%d-%m-%Y_%H-%M-%S`"
 export PATH=$PATH:/opt/linuxki
 FLAG="0x0"
 I=0
+
+echo $$ > $PIDFILE
 
 function runrunki() {
 #    echo "$STOPFILE"
@@ -51,5 +54,6 @@ while :; do
     sleep $SLEEP
 done
 
+rm -f $PIDFILE
 exit 0
 
