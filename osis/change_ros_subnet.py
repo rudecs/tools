@@ -7,14 +7,14 @@ from netaddr import IPAddress
 from JumpScale import j
 
 def usage():
-    print sys.argv[0] + " -c cloudspaceID -a new_IP_addr"
+    print sys.argv[0] + " -c cloudspaceID -a new_IP_addr -n external_network_id"
 
 def main(argv):
 
     try:
         opts, args = getopt.getopt(argv,"hc:a:n:",["csid=","addr=","nid="])
     except getopt.GetoptError:
-        print sys.argv[0] + " -c loudspaceID -a new_IP_addr -n external_network_id"
+        usage()
         sys.exit(2)
 
     for opt, arg in opts:
