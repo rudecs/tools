@@ -3,7 +3,7 @@
 if [ -z "$THRESHOLD" ]; then
     THRESHOLD="20"
 fi
-PIDFILE=/var/pid/delinuxki.pid
+PIDFILE=/var/run/delinuxki.pid
 SLEEP="10"
 WORKDIR="/opt/de/linuxki"
 STOPFILE="$WORKDIR/stop_`date +%d-%m-%Y_%H-%M-%S`"
