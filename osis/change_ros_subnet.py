@@ -6,6 +6,9 @@ import requests
 
 from netaddr import IPAddress
 from JumpScale import j
+CLIENT_ID=os.environ["CLIENT_ID"]
+CLIENT_SECRET=os.environ["CLIENT_SECRET"]
+IYO_URL='https://itsyou.online'
 
 def usage():
     print sys.argv[0] + " -c cloudspaceID -a new_IP_addr -n external_network_id"
@@ -31,7 +34,7 @@ def main(argv):
 
     change_ip(csID, IPaddr, extnetID)
     # Restore ROS to factory setting to apply the new settings
-    restoreROS(csID)
+    restoreROS(csID, CLIENT_ID, CLIENT_SECRET, IYO_URL)
 
 def change_ip(csID, IPaddr, extnetID):
     # Get needed namespaces from OSIS
@@ -63,7 +66,7 @@ def change_ip(csID, IPaddr, extnetID):
     cb.cloudspace.set(cs)
     fw.virtualfirewall.set(vfw)
 
-def restoreROS(csID):
+def restoreROS(csID, CLIENT_ID, CLIENT_SECRET, IYO_URL):
 
     # Get JWT from itsyou.online
     r = requests.post(IYO_URL + "/v1/oauth/access_token", data={'grant_type': 'client_credentials', 'client_id': CLIENT_ID, 'client_secret': CLIENT_SECRET, 'response_type': 'id_token'})
