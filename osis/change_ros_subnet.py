@@ -2,6 +2,7 @@
 
 import getopt
 import sys
+import requests
 
 from netaddr import IPAddress
 from JumpScale import j
@@ -28,20 +29,24 @@ def main(argv):
             usage()
             sys.exit(2)
 
-    change_IP(csID, IPaddr, extnetID)
+    change_ip(csID, IPaddr, extnetID)
+    # Restore ROS to factory setting to apply the new settings
+    restoreROS(csID)
 
 def change_ip(csID, IPaddr, extnetID):
     # Get needed namespaces from OSIS
     cb = j.clients.osis.getNamespace('cloudbroker')
     fw = j.clients.osis.getNamespace('vfw')
 
+    print("CSID: {0}, IPADDR: {1}, extnetID: {2}").format(csID, IPaddr, extnetID)
+
     # Create tmp OSIS objects from persisnent by IDs
-    cs = cb.cloudspace.get(csID)
+    cs = cb.cloudspace.get(int(csID))
+    rosID = cs.networkId
     vfw = fw.virtualfirewall.get(rosID)
-    extnet = cb.cloudspace.get(extnetID)
+    extnet = cb.externalnetwork.get(int(extnetID))
 
     # Get info from OSIS objects
-    rosID = cs.networkID
     prefix=IPAddress(extnet.subnetmask).netmask_bits()
     portForwarding = vfw.tcpForwardRules
 
@@ -49,7 +54,7 @@ def change_ip(csID, IPaddr, extnetID):
     cs.externalnetworkId=extnetID
     cs.externalnetworkip="{0}/{1}".format(IPaddr,prefix)
     vfw.vlan=extnet.vlan
-    vfw.pubips=[u'{}'].format(IPaddr)
+    vfw.pubips=unicode(IPaddr)
 
     for i in portForwarding:
         i.fromAddr = IPaddr
@@ -57,9 +62,6 @@ def change_ip(csID, IPaddr, extnetID):
     # Save tmp OSIS object permanently
     cb.cloudspace.set(cs)
     fw.virtualfirewall.set(vfw)
-
-    # Restore ROS to factory setting to apply the new settings
-    restoreROS(csID)
 
 def restoreROS(csID):
 
@@ -86,7 +88,7 @@ def restoreROS(csID):
     return 0
 
 if __name__ == "__main__":
-    if (len(sys.argv) < 2):
+    if (len(sys.argv) < 3):
         usage()
         sys.exit(2)
     main(sys.argv[1:])
