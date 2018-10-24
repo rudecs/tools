@@ -38,18 +38,14 @@ while :; do
         break
     fi
     LA=`cat /proc/loadavg|cut -d "." -f 1`
-    echo "LA: $LA"
-    echo "FLAG: $FLAG"
-    echo "THRESHOLD: $THRESHOLD"
     if [ "${LA}" -ge "${THRESHOLD}" ]; then
-	echo "first if"
 	if [ "$FLAG" == "0x0" ]; then
             echo "second if"
             I=$(($I+1))
 	    runrunki
 	fi
 	FLAG="0x1"
-    else FLAG="0x0"; echo "else"
+    else FLAG="0x0"
     fi
     sleep $SLEEP
 done
