@@ -3,6 +3,7 @@
 import getopt
 import sys
 import requests
+import os
 
 from netaddr import IPAddress
 from JumpScale import j
