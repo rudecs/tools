@@ -10,6 +10,16 @@ from JumpScale import j
 CLIENT_ID=os.environ["CLIENT_ID"]
 CLIENT_SECRET=os.environ["CLIENT_SECRET"]
 IYO_URL='https://itsyou.online'
+env="ds1.digitalenergy.online"
+
+def get_jwt(CLIENT_ID, CLIENT_SECRET, IYO_URL):
+    # Get JWT from itsyou.online
+    r = requests.post(IYO_URL + "/v1/oauth/access_token", data={'grant_type': 'client_credentials', 'client_id': CLIENT_ID, 'client_secret': CLIENT_SECRET, 'response_type': 'id_token'})
+    if r.status_code != 200:
+        print("ERROR: Can't get JWT from" + IYO_URL)
+        return 1
+    jwt = r.text
+    return jwt
 
 def usage():
     print sys.argv[0] + " -c cloudspaceID -a new_IP_addr -n external_network_id"
@@ -33,9 +43,15 @@ def main(argv):
             usage()
             sys.exit(2)
 
-    change_ip(csID, IPaddr, extnetID)
+    r = change_ip(csID, IPaddr, extnetID)
+    if (r != 0):
+        print("Can't change IP in OSIS")
+        sys.exit(1)
     # Restore ROS to factory setting to apply the new settings
-    restoreROS(csID, CLIENT_ID, CLIENT_SECRET, IYO_URL)
+    r = get_jwt(CLIENT_ID, CLIENT_SECRET, IYO_URL)
+    r = restoreROS(csID, jwt, env)
+    if (r != 0):
+        sys.exit(1)
 
 def change_ip(csID, IPaddr, extnetID):
     # Get needed namespaces from OSIS
@@ -67,14 +83,7 @@ def change_ip(csID, IPaddr, extnetID):
     cb.cloudspace.set(cs)
     fw.virtualfirewall.set(vfw)
 
-def restoreROS(csID, CLIENT_ID, CLIENT_SECRET, IYO_URL):
-
-    # Get JWT from itsyou.online
-    r = requests.post(IYO_URL + "/v1/oauth/access_token", data={'grant_type': 'client_credentials', 'client_id': CLIENT_ID, 'client_secret': CLIENT_SECRET, 'response_type': 'id_token'})
-    if r.status_code != 200:
-        print("ERROR: Can't get JWT from" + IYO_URL)
-        return 1
-        jwt = r.text
+def restoreROS(csID, jwt, env):
 
     # Prepare headers
     headers = {
@@ -84,9 +93,9 @@ def restoreROS(csID, CLIENT_ID, CLIENT_SECRET, IYO_URL):
     }
 
     # Push request to API server
-    r = requests.post("https://" + env + ".digitalenergy.online/restmachine/cloudbroker/cloudspace/resetVFW", data={'cloudspaceIDId': csID, 'resettype': 'factory'}, headers=headers)
+    r = requests.post("https://" + env + "/restmachine/cloudbroker/cloudspace/resetVFW", data={'cloudspaceId': csID, 'resettype': 'factory'}, headers=headers)
     print("Resetting ROS of CloudSpace {}").format(csID)
-    if ((r.status_code != 200) or (r.text != "true")):
+    if (r.status_code != 200):
         print("ERROR: Can't reset ROS in this time! Status code: {0}, response: {1}").format(r.status_code, r.text)
         return 1
     return 0
