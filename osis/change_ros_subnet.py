@@ -13,7 +13,7 @@ env="ds1.digitalenergy.online"
 
 def usage():
     print "        {} -c cloudspaceID -a new_IP_addr -n external_network_id".format(sys.argv[0])
-    print "Also you should set environment variables CLIENT_ID and CLIENT_SECRET from IYO"
+    print "        Also you should set environment variables CLIENT_ID and CLIENT_SECRET from IYO"
 
 def get_jwt(CLIENT_ID, CLIENT_SECRET, IYO_URL):
     # Get JWT from itsyou.online
@@ -30,7 +30,7 @@ def main(argv):
         CLIENT_ID=os.environ["CLIENT_ID"]
         CLIENT_SECRET=os.environ["CLIENT_SECRET"]
     except KeyError as e:
-        print("    You didn't set environment variable {0}"!).format(e)
+        print("    You didn't set environment variable {0}!").format(e)
         usage()
         sys.exit(1)
 
@@ -52,12 +52,15 @@ def main(argv):
             sys.exit(2)
 
     r = change_ip(csID, IPaddr, extnetID)
-    if (r != 0):
-        print("Can't change IP in OSIS")
-        sys.exit(1)
+    # if OK r == None...
+    
     # Restore ROS to factory setting to apply the new settings
-    r = get_jwt(CLIENT_ID, CLIENT_SECRET, IYO_URL)
+    jwt = get_jwt(CLIENT_ID, CLIENT_SECRET, IYO_URL)
     r = restoreROS(csID, jwt, env)
+    if (r == 0):
+        print("Public IP for cloudspace {0} is changed to {1}").format(csID, IPaddr)
+    else: 
+        print("ERROR: Can't reset ROS for CS {0} in this time! Status code: {1}, response: {2}").format(csID, r.status_code, r.text)
     if (r != 0):
         sys.exit(1)
 
@@ -101,8 +104,8 @@ def restoreROS(csID, jwt, env):
     }
 
     # Push request to API server
-    r = requests.post("https://" + env + "/restmachine/cloudbroker/cloudspace/resetVFW", data={'cloudspaceId': csID, 'resettype': 'factory'}, headers=headers)
     print("Resetting ROS of CloudSpace {}").format(csID)
+    r = requests.post("https://" + env + "/restmachine/cloudbroker/cloudspace/resetVFW", data={'cloudspaceId': csID, 'resettype': 'factory'}, headers=headers)
     if (r.status_code != 200):
         print("ERROR: Can't reset ROS in this time! Status code: {0}, response: {1}").format(r.status_code, r.text)
         return 1
