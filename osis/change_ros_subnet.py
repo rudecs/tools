@@ -14,11 +14,12 @@ import requests
 from netaddr import IPAddress
 from JumpScale import j
 IYO_URL='https://itsyou.online'
-env="ds1.digitalenergy.online"
+#ENV_URL="ds1.digitalenergy.online"
 
 def usage():
     print "        {} -c cloudspaceID -a new_IP_addr -n external_network_id".format(sys.argv[0])
     print "        Also you should set environment variables CLIENT_ID and CLIENT_SECRET from IYO"
+    print "        and the ENV_URL like a https://my.env.url"
 
 def get_jwt(CLIENT_ID, CLIENT_SECRET, IYO_URL):
     # Get JWT from itsyou.online
@@ -34,6 +35,7 @@ def main(argv):
     try:
         CLIENT_ID=os.environ["CLIENT_ID"]
         CLIENT_SECRET=os.environ["CLIENT_SECRET"]
+        ENV_URL=os.environ["ENV_URL"]
     except KeyError as e:
         print("    You didn't set environment variable {0}!").format(e)
         usage()
@@ -61,7 +63,7 @@ def main(argv):
     
     # Restore ROS to factory setting to apply the new settings
     jwt = get_jwt(CLIENT_ID, CLIENT_SECRET, IYO_URL)
-    r = restoreROS(csID, jwt, env)
+    r = restoreROS(csID, jwt, ENV_URL)
     if (r == 0):
         print("Public IP for cloudspace {0} is changed to {1}").format(csID, IPaddr)
     else: 
@@ -99,7 +101,7 @@ def change_ip(csID, IPaddr, extnetID):
     cb.cloudspace.set(cs)
     fw.virtualfirewall.set(vfw)
 
-def restoreROS(csID, jwt, env):
+def restoreROS(csID, jwt, ENV_URL):
 
     # Prepare headers
     headers = {
@@ -110,7 +112,7 @@ def restoreROS(csID, jwt, env):
 
     # Push request to API server
     print("Resetting ROS of CloudSpace {}").format(csID)
-    r = requests.post("https://" + env + "/restmachine/cloudbroker/cloudspace/resetVFW", data={'cloudspaceId': csID, 'resettype': 'factory'}, headers=headers)
+    r = requests.post(ENV_URL + "/restmachine/cloudbroker/cloudspace/resetVFW", data={'cloudspaceId': csID, 'resettype': 'factory'}, headers=headers)
     if (r.status_code != 200):
         print("ERROR: Can't reset ROS in this time! Status code: {0}, response: {1}").format(r.status_code, r.text)
         return 1
