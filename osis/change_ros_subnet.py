@@ -1,5 +1,10 @@
 #!/usr/bin/python
 
+name = "change_ros_subnet"
+category = "osis"
+organization = "digitalenergy.online"
+author = "vadim.sorokin@digitalenergy.online"
+
 import getopt
 import os
 import sys
