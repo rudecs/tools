@@ -65,7 +65,7 @@ def main(argv):
     jwt = get_jwt(CLIENT_ID, CLIENT_SECRET, IYO_URL)
     r = restoreROS(csID, jwt, ENV_URL)
     if (r == 0):
-        print("Public IP for cloudspace {0} is changed to {1}").format(csID, IPaddr)
+        print("Public IP for cloudspace {0} was changed to {1}").format(csID, IPaddr)
     else: 
         print("ERROR: Can't reset ROS for CS {0} in this time! Status code: {1}, response: {2}").format(csID, r.status_code, r.text)
     if (r != 0):
