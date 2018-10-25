@@ -1,16 +1,19 @@
 #!/usr/bin/python
 
 import getopt
-import sys
-import requests
 import os
+import sys
+sys.path.append('/opt/jumpscale7/lib')
+import requests
 
 from netaddr import IPAddress
 from JumpScale import j
-CLIENT_ID=os.environ["CLIENT_ID"]
-CLIENT_SECRET=os.environ["CLIENT_SECRET"]
 IYO_URL='https://itsyou.online'
 env="ds1.digitalenergy.online"
+
+def usage():
+    print "        {} -c cloudspaceID -a new_IP_addr -n external_network_id".format(sys.argv[0])
+    print "Also you should set environment variables CLIENT_ID and CLIENT_SECRET from IYO"
 
 def get_jwt(CLIENT_ID, CLIENT_SECRET, IYO_URL):
     # Get JWT from itsyou.online
@@ -21,10 +24,15 @@ def get_jwt(CLIENT_ID, CLIENT_SECRET, IYO_URL):
     jwt = r.text
     return jwt
 
-def usage():
-    print sys.argv[0] + " -c cloudspaceID -a new_IP_addr -n external_network_id"
-
 def main(argv):
+
+    try:
+        CLIENT_ID=os.environ["CLIENT_ID"]
+        CLIENT_SECRET=os.environ["CLIENT_SECRET"]
+    except KeyError as e:
+        print("    You didn't set environment variable {0}"!).format(e)
+        usage()
+        sys.exit(1)
 
     try:
         opts, args = getopt.getopt(argv,"hc:a:n:",["csid=","addr=","nid="])
