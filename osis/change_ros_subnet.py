@@ -61,8 +61,10 @@ def main(argv):
 
     print("Changing IP of CS ID {} in OSIS").format(csID)
     IPaddr = change_ip(csID, extnetID)
-    # if OK r == None...
-    
+    if ( IPaddr != 0):
+        print("Exiting...")
+        sys.exit(1)
+    time.sleep(5) 
     # Restore ROS to factory setting to apply the new setitings
     try:
         jwt
@@ -74,6 +76,7 @@ def main(argv):
     r = restoreROS(csID, jwt, ENV_URL)
     if (r == 0):
         print("Public IP for cloudspace {0} was changed to {1}").format(csID, IPaddr)
+        time.sleep(5)
     else: 
         print("ERROR: Can't reset ROS for CS {0} in this time! Status code: {1}, response: {2}").format(csID, r.status_code, r.text)
     if (r != 0):
@@ -108,8 +111,14 @@ def change_ip(csID, extnetID):
         i.fromAddr = IPaddr
 
     # Save tmp OSIS object permanently
-    cb.cloudspace.set(cs)
-    fw.virtualfirewall.set(vfw)
+    try:
+        cb.cloudspace.set(cs)
+        fw.virtualfirewall.set(vfw)
+    except Exception as e:
+        print("ERROR: Something going wrong! Can't set new IP in OSIS!")
+        print(e)
+        return 1
+
     return IPaddr
 
 def restoreROS(csID, jwt, ENV_URL):
