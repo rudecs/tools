@@ -92,8 +92,12 @@ def change_ip(csID, extnetID):
     rosID = cs.networkId
     vfw = fw.virtualfirewall.get(rosID)
     extnet = cb.externalnetwork.get(int(extnetID))
-    freeip = str(extnet.ips[0])
-    IPaddr = freeip.split("/")[0]
+    freeip = extnet.ips[0]
+    IPaddr = str(freeip.split("/")[0])
+
+    # Remove choosen IP from list of free IPs in OSIS
+    extnet.ips.remove(freeip)
+    cb.externalnetwork.set(extnet)
 
     print("CSID: {0}, IPADDR: {1}, extnetID: {2}").format(csID, IPaddr, extnetID)
 
