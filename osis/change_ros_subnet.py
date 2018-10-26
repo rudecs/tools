@@ -61,7 +61,7 @@ def main(argv):
 
     print("Changing IP of CS ID {} in OSIS").format(csID)
     IPaddr = change_ip(csID, extnetID)
-    if ( IPaddr != 0):
+    if ( IPaddr == 1):
         print("Exiting...")
         sys.exit(1)
     time.sleep(5) 
