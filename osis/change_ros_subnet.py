@@ -8,6 +8,7 @@ author = "vadim.sorokin@digitalenergy.online"
 import getopt
 import os
 import sys
+import time
 sys.path.append('/opt/jumpscale7/lib')
 import requests
 
@@ -17,7 +18,7 @@ IYO_URL='https://itsyou.online'
 #ENV_URL="ds1.digitalenergy.online"
 
 def usage():
-    print "        {} -c cloudspaceID -a new_IP_addr -n external_network_id".format(sys.argv[0])
+    print "        {} -c cloudspaceID -n external_network_id".format(sys.argv[0])
     print "        Also you should set environment variables CLIENT_ID and CLIENT_SECRET from IYO"
     print "        and the ENV_URL like a https://my.env.url"
 
@@ -42,15 +43,15 @@ def main(argv):
         sys.exit(1)
 
     try:
-        opts, args = getopt.getopt(argv,"hc:a:n:",["csid=","addr=","nid="])
+        opts, args = getopt.getopt(argv,"hc:n:",["csid=","nid="])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
 
     for opt, arg in opts:
-        if opt in ("-a", "--addr"):
-            IPaddr = arg
-        elif opt in ("-c", "--csid"):
+#        if opt in ("-a", "--addr"):
+#            IPaddr = arg
+        if opt in ("-c", "--csid"):
             csID = arg
         elif opt in ("-n", "--nid"):
             extnetID = arg
@@ -58,11 +59,18 @@ def main(argv):
             usage()
             sys.exit(2)
 
-    r = change_ip(csID, IPaddr, extnetID)
+    print("Changing IP of CS ID {} in OSIS").format(csID)
+    IPaddr = change_ip(csID, extnetID)
     # if OK r == None...
     
-    # Restore ROS to factory setting to apply the new settings
-    jwt = get_jwt(CLIENT_ID, CLIENT_SECRET, IYO_URL)
+    # Restore ROS to factory setting to apply the new setitings
+    try:
+        jwt
+    except NameError:
+        print("Getting JWT")
+        jwt = get_jwt(CLIENT_ID, CLIENT_SECRET, IYO_URL)
+    
+    print("Restoring ROS of CS ID {} to factory").format(csID)
     r = restoreROS(csID, jwt, ENV_URL)
     if (r == 0):
         print("Public IP for cloudspace {0} was changed to {1}").format(csID, IPaddr)
@@ -71,18 +79,20 @@ def main(argv):
     if (r != 0):
         sys.exit(1)
 
-def change_ip(csID, IPaddr, extnetID):
+def change_ip(csID, extnetID):
     # Get needed namespaces from OSIS
     cb = j.clients.osis.getNamespace('cloudbroker')
     fw = j.clients.osis.getNamespace('vfw')
-
-    print("CSID: {0}, IPADDR: {1}, extnetID: {2}").format(csID, IPaddr, extnetID)
 
     # Create tmp OSIS objects from persisnent by IDs
     cs = cb.cloudspace.get(int(csID))
     rosID = cs.networkId
     vfw = fw.virtualfirewall.get(rosID)
     extnet = cb.externalnetwork.get(int(extnetID))
+    freeip = str(extnet.ips[0])
+    IPaddr = freeip.split("/")[0]
+
+    print("CSID: {0}, IPADDR: {1}, extnetID: {2}").format(csID, IPaddr, extnetID)
 
     # Get info from OSIS objects
     prefix=IPAddress(extnet.subnetmask).netmask_bits()
@@ -100,6 +110,7 @@ def change_ip(csID, IPaddr, extnetID):
     # Save tmp OSIS object permanently
     cb.cloudspace.set(cs)
     fw.virtualfirewall.set(vfw)
+    return IPaddr
 
 def restoreROS(csID, jwt, ENV_URL):
 
@@ -119,7 +130,7 @@ def restoreROS(csID, jwt, ENV_URL):
     return 0
 
 if __name__ == "__main__":
-    if (len(sys.argv) < 3):
+    if (len(sys.argv) < 2):
         usage()
         sys.exit(2)
     main(sys.argv[1:])
