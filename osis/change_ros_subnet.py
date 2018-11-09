@@ -43,15 +43,16 @@ def main(argv):
         sys.exit(1)
 
     try:
-        opts, args = getopt.getopt(argv,"hc:n:",["csid=","nid="])
+        opts, args = getopt.getopt(argv,"hc:n:a:",["csid=","nid=","addr="])
     except getopt.GetoptError:
+        print("test")
         usage()
         sys.exit(2)
 
     for opt, arg in opts:
-#        if opt in ("-a", "--addr"):
-#            IPaddr = arg
-        if opt in ("-c", "--csid"):
+        if opt in ("-a", "--addr"):
+            IPaddr = arg
+        elif opt in ("-c", "--csid"):
             csID = arg
         elif opt in ("-n", "--nid"):
             extnetID = arg
@@ -60,10 +61,10 @@ def main(argv):
             sys.exit(2)
 
     print("Changing IP of CS ID {} in OSIS").format(csID)
-    IPaddr = change_ip(csID, extnetID)
-    if ( IPaddr == 1):
-        print("Exiting...")
-        sys.exit(1)
+    change_ip(csID, extnetID, IPaddr)
+#    if ( IPaddr == 1):
+#        print("Exiting...")
+#        sys.exit(1)
     time.sleep(5) 
     # Restore ROS to factory setting to apply the new setitings
     try:
@@ -82,7 +83,7 @@ def main(argv):
     if (r != 0):
         sys.exit(1)
 
-def change_ip(csID, extnetID):
+def change_ip(csID, extnetID, IPaddr):
     # Get needed namespaces from OSIS
     cb = j.clients.osis.getNamespace('cloudbroker')
     fw = j.clients.osis.getNamespace('vfw')
@@ -92,11 +93,11 @@ def change_ip(csID, extnetID):
     rosID = cs.networkId
     vfw = fw.virtualfirewall.get(rosID)
     extnet = cb.externalnetwork.get(int(extnetID))
-    freeip = extnet.ips[0]
-    IPaddr = str(freeip.split("/")[0])
+#    freeip = extnet.ips[0]
+#    IPaddr = str(freeip.split("/")[0])
 
     # Remove choosen IP from list of free IPs in OSIS
-    extnet.ips.remove(freeip)
+#    extnet.ips.remove(freeip)
     cb.externalnetwork.set(extnet)
 
     print("CSID: {0}, IPADDR: {1}, extnetID: {2}").format(csID, IPaddr, extnetID)
